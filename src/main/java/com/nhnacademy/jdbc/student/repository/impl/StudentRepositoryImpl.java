@@ -12,12 +12,42 @@ public class StudentRepositoryImpl implements StudentRepository {
     @Override
     public int save(Connection connection, Student student){
         //todo#2 학생등록
-        return 0;
+        String sql = "INSERT INTO jdbc_students (id,name,gender,age) VALUES(?,?,?,?)";
+
+        try(
+                PreparedStatement preparedStatement = connection.prepareStatement(sql);
+                ){
+            preparedStatement.setString(1, student.getId());
+            preparedStatement.setString(2, student.getName());
+            preparedStatement.setString(3, student.getGender().toString());
+            preparedStatement.setInt(4, student.getAge());
+
+            return preparedStatement.executeUpdate();
+        }catch(SQLException e){
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public Optional<Student> findById(Connection connection,String id){
         //todo#3 학생조회
+        String sql = "SELECT id, name, gender, age FROM jdbc_students WHERE id = ?";
+
+        ResultSet resultSet = null;
+        try(
+                PreparedStatement preparedStatement = connection.prepareStatement(sql);
+                ){
+            preparedStatement.setString(1, id);
+            resultSet = preparedStatement.executeQuery();
+            if(resultSet.next()){
+                Student student = new Student(resultSet.getString("id"), resultSet.getString("name"), Student.GENDER.valueOf(resultSet.getString("gender")),resultSet.getInt("age"));
+
+                return Optional.of(student);
+            }
+
+        }catch (SQLException e){
+            throw new RuntimeException(e);
+        }
 
         return Optional.empty();
     }
@@ -25,15 +55,35 @@ public class StudentRepositoryImpl implements StudentRepository {
     @Override
     public int update(Connection connection,Student student){
         //todo#4 학생수정
+        String sql = "UPDATE jdbc_students SET name = ?, gender = ?, age = ? WHERE id = ?";
+        try(
+                PreparedStatement preparedStatement = connection.prepareStatement(sql);
+                ){
+            preparedStatement.setString(1, student.getName());
+            preparedStatement.setString(2, student.getGender().toString());
+            preparedStatement.setInt(3, student.getAge());
+            preparedStatement.setString(4, student.getId());
 
-        return 0;
+            return preparedStatement.executeUpdate();
+        }catch(SQLException e){
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public int deleteById(Connection connection,String id){
         //todo#5 학생삭제
+        String sql = "DELETE FROM jdbc_students WHERE id = ?";
 
-        return 0;
+        try(
+                PreparedStatement preparedStatement = connection.prepareStatement(sql);
+                ){
+            preparedStatement.setString(1,id);
+            return preparedStatement.executeUpdate();
+
+        }catch (SQLException e){
+            throw new RuntimeException(e);
+        }
     }
 
 }
