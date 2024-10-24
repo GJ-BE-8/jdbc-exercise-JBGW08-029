@@ -1,5 +1,6 @@
 package com.nhnacademy.jdbc.club.repository.impl;
 
+import com.nhnacademy.jdbc.club.domain.Club;
 import com.nhnacademy.jdbc.club.domain.ClubStudent;
 import com.nhnacademy.jdbc.club.repository.ClubRegistrationRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -16,20 +17,67 @@ public class ClubRegistrationRepositoryImpl implements ClubRegistrationRepositor
     @Override
     public int save(Connection connection, String studentId, String clubId) {
         //todo#11 - 핵생 -> 클럽 등록, executeUpdate() 결과를 반환
+        String sql = "INSERT INTO jdbc_club_registrations (student_id, club_id) VALUES(?,?)";
+        try(
+                PreparedStatement preparedStatement = connection.prepareStatement(sql);
+                ){
 
-        return 0;
+            preparedStatement.setString(1,studentId);
+            preparedStatement.setString(2, clubId);
+
+            return preparedStatement.executeUpdate();
+
+        }catch (SQLException e){
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public int deleteByStudentIdAndClubId(Connection connection, String studentId, String clubId) {
         //todo#12 - 핵생 -> 클럽 탈퇴, executeUpdate() 결과를 반환
-        return 0;
+        String sql = "DELETE FROM jdbc_club_registrations WHERE student_id = ? AND club_id = ?";
+
+        try(
+                PreparedStatement preparedStatement = connection.prepareStatement(sql);
+                ){
+            preparedStatement.setString(1, studentId);
+            preparedStatement.setString(2, clubId);
+
+            return preparedStatement.executeUpdate();
+        }catch (SQLException e){
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public List<ClubStudent> findClubStudentsByStudentId(Connection connection, String studentId) {
         //todo#13 - 핵생 -> 클럽 등록, executeUpdate() 결과를 반환
-        return Collections.emptyList();
+//        String sql = "select a.id AS student_id, a.name AS student_name , c.club_id, c.club_name from jdbc_students a inner join jdbc_club_registrations b on a.id=b.student_id inner join jdbc_club c on b.club_id=c.club_id where a.id=?";
+        String sql = "SELECT a.id AS student_id, a.name AS student_name, c.club_id, c.club_name from jdbc_students a inner join jdbc_club_registrations b on a.id = b.student_id inner join jdbc_club c on b.club_id = c.club_id WHERE a.id = ?";
+        ResultSet resultSet = null;
+        try(
+                PreparedStatement preparedStatement = connection.prepareStatement(sql);
+                ){
+            preparedStatement.setString(1, studentId);
+            resultSet = preparedStatement.executeQuery();
+            List<ClubStudent> clubStudentList = new ArrayList<>();
+            while(resultSet.next()){
+                clubStudentList.add(new ClubStudent(resultSet.getString("student_id"), resultSet.getString("student_name"), resultSet.getString("club_id"), resultSet.getString("club_name")));
+
+            }
+            return clubStudentList;
+        }catch(SQLException e){
+            throw new RuntimeException(e);
+        }finally {
+            try{
+                if(Objects.nonNull(resultSet)) {
+                    resultSet.close();
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
     }
 
     @Override
