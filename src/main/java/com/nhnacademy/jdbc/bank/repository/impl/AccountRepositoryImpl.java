@@ -90,7 +90,7 @@ public class AccountRepositoryImpl implements AccountRepository {
     @Override
     public int deposit(Connection connection, long accountNumber, long amount){
         //todo#4 입금, executeUpdate() 결과를 반환 합니다.
-        String sql = "UPDATE jdbc_account SET balance + ? WHERE account_number = ?";
+        String sql = "UPDATE jdbc_account SET balance = balance + ? WHERE account_number = ?";
 
         try(
                 PreparedStatement preparedStatement = connection.prepareStatement(sql);
@@ -108,7 +108,7 @@ public class AccountRepositoryImpl implements AccountRepository {
     @Override
     public int withdraw(Connection connection, long accountNumber, long amount){
         //todo#5 출금, executeUpdate() 결과를 반환 합니다.
-        String sql = "UPDATE jdbc_account SET balance - ? WHERE account_number = ? ";
+        String sql = "UPDATE jdbc_account SET balance = balance - ? WHERE account_number = ? ";
 
         try(
                 PreparedStatement preparedStatement = connection.prepareStatement(sql);
