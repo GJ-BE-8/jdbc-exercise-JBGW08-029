@@ -123,13 +123,73 @@ public class StudentRepositoryImpl implements StudentRepository {
     @Override
     public long totalCount(Connection connection) {
         //todo#4 totalCount 구현
+        String sql = "SELECT COUNT(*) AS COUNT FROM jdbc_students";
+
+        ResultSet resultSet = null;
+        try(
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+        ){
+            resultSet = preparedStatement.executeQuery();
+
+            if(resultSet.next()){
+                return resultSet.getLong(1);
+            }
+        }catch(SQLException e){
+            throw new RuntimeException(e);
+        }finally {
+            try{
+                if(Objects.nonNull(resultSet)){
+                    resultSet.close();
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
         return 0l;
     }
 
     @Override
     public Page<Student> findAll(Connection connection, int page, int pageSize) {
         //todo#5 페이징 처리 구현
-        return null;
+        int offset = (page - 1) * pageSize;
+        int limit = pageSize;
+        long total = 0;
+
+        ResultSet resultSet = null;
+        String sql = "SELECT id, name, gender, age, created_at from jdbc_students order by id desc limit ?,?";
+
+        try(
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+        ){
+            preparedStatement.setInt(1, offset);
+            preparedStatement.setInt(2, limit);
+
+            resultSet = preparedStatement.executeQuery();
+            List<Student> studentList = new ArrayList<>();
+
+            while(resultSet.next()){
+                studentList.add(new Student(resultSet.getString("id"), resultSet.getString("name"), Student.GENDER.valueOf(resultSet.getString("gender")),resultSet.getInt("age"),resultSet.getTimestamp("created_at").toLocalDateTime()));
+
+            }
+
+            if(!studentList.isEmpty()){
+                total = totalCount(connection);
+            }
+
+            return new Page<Student>(studentList,total);
+
+        }catch(SQLException e){
+            throw new RuntimeException(e);
+        }finally {
+            try {
+                if (Objects.nonNull(resultSet)) {
+                    resultSet.close();
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
     }
 
 }
